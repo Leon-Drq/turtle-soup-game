@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>海龟汤推理游戏 - 多谜题版</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/17.0.2/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/17.0.2/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.26.0/babel.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .game-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #333;
+            text-align: center;
+        }
+        .question, .answer, .hint {
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .history {
+            margin-top: 20px;
+            border-top: 1px solid #ccc;
+            padding-top: 20px;
+        }
+        .hint-text {
+            font-style: italic;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const puzzles = [
+            {
+                id: 1,
+                description: "一个男人在餐厅点了一份海龟汤，吃了一口后就自杀了。为什么？",
+                solution: "这个男人和他的妻子多年前在海难中失踪。他一直在寻找她。他点了海龟汤，吃了一口后意识到这是他妻子的肉。原来他们漂流到了一个荒岛，妻子死了，而他为了生存吃了她。他无法承受这个事实，所以选择了自杀。",
+                answers: {
+                    "这个男人是第一次吃海龟汤吗": "是",
+                    "海龟汤里有毒吗": "否",
+                    "这个男人有什么特殊的经历吗": "是",
+                    "海龟汤和他的过去有关吗": "是",
+                    "他认出了汤的味道吗": "是",
+                    "汤里有人肉吗": "是",
+                    "那是他认识的人的肉吗": "是",
+                    "是他妻子的肉吗": "是"
+                },
+                hints: [
+                    "这个男人有一段悲惨的过去。",
+                    "海龟汤里的内容不只是海龟肉。",
+                    "想想看，为什么吃了一口汤就会让人想自杀？"
+                ]
+            },
+            {
+                id: 2,
+                description: "一位老人躺在病床上，护士进来查房时发现老人已经去世，但是床头的闹钟还在响着。为什么？",
+                solution: "老人是聋子。他设置了闹钟是为了提醒自己按时吃药，但因为听不到闹钟声音，所以没能及时吃药而去世。",
+                answers: {
+                    "老人是自然死亡的吗": "是",
+                    "闹钟是老人自己设置的吗": "是",
+                    "闹钟和老人的死亡有直接关系吗": "否",
+                    "老人有特殊的身体状况吗": "是",
+                    "闹钟是用来提醒吃药的吗": "是",
+                    "老人是聋子吗": "是"
+                },
+                hints: [
+                    "老人设置闹钟是有特殊原因的。",
+                    "老人有一个身体上的障碍。",
+                    "想想看，为什么老人会错过闹钟提醒？"
+                ]
+            }
+        ];
+
+        const TurtleSoupGame = () => {
+            const [currentPuzzleIndex, setCurrentPuzzleIndex] = React.useState(0);
+            const [question, setQuestion] = React.useState('');
+            const [answer, setAnswer] = React.useState('');
+            const [history, setHistory] = React.useState([]);
+            const [gameOver, setGameOver] = React.useState(false);
+            const [hintCount, setHintCount] = React.useState(0);
+            const [showHint, setShowHint] = React.useState(false);
+
+            const currentPuzzle = puzzles[currentPuzzleIndex];
+
+            const handleQuestion = () => {
+                if (question.trim() === '') return;
+                
+                let response;
+                if (currentPuzzle.answers.hasOwnProperty(question)) {
+                    response = currentPuzzle.answers[question];
+                } else {
+                    response = Math.random() < 0.5 ? "是" : "否";
+                }
+                
+                setHistory([...history, { question, answer: response }]);
+                setQuestion('');
+            };
+
+            const handleGuess = () => {
+                if (answer.trim() === '') return;
+                
+                if (answer.toLowerCase().includes(currentPuzzle.solution.substring(0, 10))) {
+                    setGameOver(true);
+                } else {
+                    setHistory([...history, { question: "猜测", answer: "猜测不正确，请继续尝试。" }]);
+                }
+                setAnswer('');
+            };
+
+            const handleHint = () => {
+                if (hintCount < 3) {
+                    setShowHint(true);
+                    setHintCount(hintCount + 1);
+                }
+            };
+
+            const handleNextPuzzle = () => {
+                if (currentPuzzleIndex < puzzles.length - 1) {
+                    setCurrentPuzzleIndex(currentPuzzleIndex + 1);
+                    setHistory([]);
+                    setGameOver(false);
+                    setHintCount(0);
+                    setShowHint(false);
+                } else {
+                    alert("恭喜你！你已经完成了所有的谜题！");
+                }
+            };
+
+            return (
+                <div className="game-container">
+                    <h1>海龟汤推理游戏 - 多谜题版</h1>
+                    <h2>谜题 {currentPuzzleIndex + 1}/{puzzles.length}</h2>
+                    <p><strong>谜题：</strong>{currentPuzzle.description}</p>
+                    {!gameOver ? (
+                        <div>
+                            <div className="question">
+                                <input 
+                                    type="text" 
+                                    value={question} 
+                                    onChange={(e) => setQuestion(e.target.value)} 
+                                    placeholder="输入你的问题（是或否的问题）" 
+                                />
+                                <button onClick={handleQuestion}>提问</button>
+                            </div>
+                            <div className="answer">
+                                <input 
+                                    type="text" 
+                                    value={answer} 
+                                    onChange={(e) => setAnswer(e.target.value)} 
+                                    placeholder="输入你的猜测" 
+                                />
+                                <button onClick={handleGuess}>猜测</button>
+                            </div>
+                            <div className="hint">
+                                <button onClick={handleHint} disabled={hintCount >= 3}>
+                                    提示 ({3 - hintCount} 次剩余)
+                                </button>
+                                {showHint && (
+                                    <p className="hint-text">提示：{currentPuzzle.hints[hintCount - 1]}</p>
+                                )}
+                            </div>
+                        </div>
+                    ) : (
+                        <div>
+                            <h2>恭喜你猜对了！</h2>
+                            <p>{currentPuzzle.solution}</p>
+                            <button onClick={handleNextPuzzle}>下一个谜题</button>
+                        </div>
+                    )}
+                    <div className="history">
+                        <h3>问答历史：</h3>
+                        {history.map((item, index) => (
+                            <p key={index}><strong>Q: </strong>{item.question} <strong>A: </strong>{item.answer}</p>
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+
+        ReactDOM.render(<TurtleSoupGame />, document.getElementById('root'));
+    </script>
+</body>
+</html>
